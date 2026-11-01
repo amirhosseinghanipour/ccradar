@@ -5,6 +5,8 @@ Update with `claude plugin update ccradar`.
 
 ## Unreleased
 
+## 1.0.1 - 2026-11-01
+
 - Added a release script (`scripts/release.sh`), this changelog, and CI that validates and tests ccradar on Linux, macOS and Windows.
 
 ## 1.0.0 - 2026-11-01

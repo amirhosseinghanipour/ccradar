@@ -1,6 +1,6 @@
 {
   "name": "ccradar",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A live, colorful radar for Claude Code: agent lanes, activity sparkline, git changes and commits, floating over your session in Neovim color themes",
   "author": {
     "name": "Amirhossein Ghanipour",

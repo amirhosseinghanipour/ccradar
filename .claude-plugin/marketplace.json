@@ -1,0 +1,6 @@
+{
+  "name": "ccradar",
+  "description": "ccradar: a live, colorful agent and git radar for Claude Code",
+  "owner": { "name": "Amirhossein Ghanipour" },
+  "plugins": [{ "name": "ccradar", "source": "./" }]
+}

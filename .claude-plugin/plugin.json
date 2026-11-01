@@ -1,0 +1,14 @@
+{
+  "name": "ccradar",
+  "version": "1.0.0",
+  "description": "A live, colorful radar for Claude Code: agent lanes, activity sparkline, git changes and commits, floating over your session in Neovim color themes",
+  "author": {
+    "name": "Amirhossein Ghanipour",
+    "url": "https://github.com/amirhosseinghanipour"
+  },
+  "homepage": "https://github.com/amirhosseinghanipour/ccradar",
+  "repository": "https://github.com/amirhosseinghanipour/ccradar",
+  "license": "MIT",
+  "keywords": ["git", "agents", "monitor", "tui", "visualization", "themes", "catppuccin", "tokyonight"],
+  "types": "./types/index.d.ts"
+}

@@ -1,5 +1,8 @@
 # ✻ ccradar
 
+[![ci](https://github.com/amirhosseinghanipour/ccradar/actions/workflows/ci.yml/badge.svg)](https://github.com/amirhosseinghanipour/ccradar/actions/workflows/ci.yml)
+[![license: MIT](https://img.shields.io/badge/license-MIT-cba6f7)](LICENSE)
+
 **A live, colorful radar for Claude Code.** See what every agent is doing right now, what it changed in git, and how busy your session is, in a card that floats over your session, painted in your favorite Neovim color theme.
 
 ```
@@ -85,6 +88,14 @@ claude plugin test ./ccradar      # run the render tests
 ```
 
 Themes live in [`hooks/themes.ts`](hooks/themes.ts). Adding one is a single palette object; PRs welcome.
+
+### Releasing
+
+1. Add your notes under `## Unreleased` in [`CHANGELOG.md`](CHANGELOG.md) and commit them.
+2. Run `./scripts/release.sh X.Y.Z`. It validates, tests, bumps the version, tags, pushes and creates the GitHub release.
+3. Users get it with `claude plugin update ccradar`.
+
+CI runs validate and the tests on Linux, macOS and Windows, against the oldest supported Claude Code and the latest.
 
 ## License
 

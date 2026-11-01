@@ -1,0 +1,48 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: validate + test (Claude Code ${{ matrix.claude }}, ${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        # The oldest version ccradar supports, and whatever is newest.
+        claude: ['2.1.316', 'latest']
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Claude Code
+        run: npm install -g @anthropic-ai/claude-code@${{ matrix.claude }}
+
+      - name: Version matches between tag and plugin.json
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: bash
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          manifest="$(node -p "require('./.claude-plugin/plugin.json').version")"
+          if [ "$tag" != "$manifest" ]; then
+            echo "Tag v$tag does not match plugin.json version $manifest" >&2
+            exit 1
+          fi
+
+      # Neither step needs a Claude login.
+      - name: Validate
+        run: claude plugin validate .
+
+      - name: Test
+        run: claude plugin test .

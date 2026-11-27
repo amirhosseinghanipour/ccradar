@@ -14,7 +14,8 @@ const BAND = {
   },
 } as const
 
-const STATUS = '## main...origin/main [ahead 2]\n M src/auth.ts\n?? notes.md\n'
+const RENAMED_PATH = 'src/café -> auth.ts'
+const STATUS = `## main...origin/main [ahead 2]\0RM ${RENAMED_PATH}\0src/auth.ts\0?? notes.md\0`
 
 test('the strip and the floating card draw on the terminal', async ($, on) => {
   on('command.register', () => ({ value: { command: 'ccradar' } }))
@@ -25,8 +26,10 @@ test('the strip and the floating card draw on the terminal', async ($, on) => {
     const out =
       argv[1] === 'status'
         ? STATUS
-        : argv[1] === 'diff' && argv.length === 3
-          ? '12\t3\tsrc/auth.ts\n'
+        : argv[1] === 'diff'
+          ? argv.includes('--cached')
+            ? `2\t1\t\0src/auth.ts\0${RENAMED_PATH}\0`
+            : `12\t3\t${RENAMED_PATH}\0`
           : argv[1] === 'log'
             ? 'a1b2c3d\tfix: session refresh\t5 minutes ago'
             : ''
@@ -42,6 +45,8 @@ test('the strip and the floating card draw on the terminal', async ($, on) => {
     await $.command.run({ command: 'ccradar', args: `theme ${theme}` } as never)
     const ui = await $.ui.mount({ ...BAND, surface: 'terminal' })
     expect(await ui.find({ type: 'Text', text: /✻/ })).toBeDefined()
+    expect(await ui.find({ type: 'Text', text: /\+14/ })).toBeDefined()
+    expect(await ui.find({ type: 'Text', text: /−4/ })).toBeDefined()
     expect(await ui.find({ type: 'Raster' })).toBeDefined()
     await ui.unmount()
   }

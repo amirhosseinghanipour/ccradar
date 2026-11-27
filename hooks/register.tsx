@@ -328,13 +328,17 @@ async function git($: EngineInterface, args: string[]) {
 }
 
 function parseNumstat(text: string, into: Map<string, { added: number; removed: number }>) {
-  for (const line of text.split('\n')) {
-    const m = line.match(/^(\d+|-)\t(\d+|-)\t(.+)$/)
+  const records = text.split('\0')
+  for (let i = 0; i < records.length; i++) {
+    const m = records[i]!.match(/^(\d+|-)\t(\d+|-)\t(.*)$/s)
     if (!m) continue
     let path = m[3]!
-    const brace = path.match(/^(.*)\{(.*) => (.*)\}(.*)$/)
-    if (brace) path = `${brace[1]}${brace[3]}${brace[4]}`
-    else if (path.includes(' => ')) path = path.split(' => ')[1]!
+    if (path === '') {
+      // A rename or copy puts the source and destination in the next two fields.
+      i += 2
+      path = records[i] ?? ''
+      if (path === '') continue
+    }
     const cur = into.get(path) ?? { added: 0, removed: 0 }
     cur.added += m[1] === '-' ? 0 : Number(m[1])
     cur.removed += m[2] === '-' ? 0 : Number(m[2])
@@ -355,10 +359,10 @@ function shortWhen(when: string) {
 }
 
 async function readGit($: EngineInterface): Promise<GitSnapshot> {
-  const status = await git($, ['status', '--porcelain=v1', '-b'])
+  const status = await git($, ['status', '--porcelain=v1', '-b', '-z'])
   if (status.exitCode !== 0) return EMPTY
-  const lines = status.stdout.split('\n').filter(l => l.length > 0)
-  const head = lines[0]?.startsWith('## ') ? lines.shift()!.slice(3) : ''
+  const records = status.stdout.split('\0')
+  const head = records[0]?.startsWith('## ') ? records.shift()!.slice(3) : ''
   let branch = head
   let upstream = ''
   let ahead = 0
@@ -375,16 +379,19 @@ async function readGit($: EngineInterface): Promise<GitSnapshot> {
     }
   }
   const counts = new Map<string, { added: number; removed: number }>()
-  parseNumstat((await git($, ['diff', '--numstat'])).stdout, counts)
-  parseNumstat((await git($, ['diff', '--numstat', '--cached'])).stdout, counts)
-  const files: FileChange[] = lines.map(line => {
-    const code = line.slice(0, 2)
-    let path = line.slice(3)
-    if (path.includes(' -> ')) path = path.split(' -> ')[1]!
-    path = path.replace(/^"(.*)"$/, '$1')
+  parseNumstat((await git($, ['diff', '--numstat', '-z'])).stdout, counts)
+  parseNumstat((await git($, ['diff', '--numstat', '--cached', '-z'])).stdout, counts)
+  const files: FileChange[] = []
+  for (let i = 0; i < records.length; i++) {
+    const record = records[i]!
+    if (record === '') continue
+    const code = record.slice(0, 2)
+    const path = record.slice(3)
+    // Status lists the destination first, followed by the source.
+    if (/[RC]/.test(code)) i++
     const c = counts.get(path) ?? { added: 0, removed: 0 }
-    return { path, code, added: c.added, removed: c.removed }
-  })
+    files.push({ path, code, added: c.added, removed: c.removed })
+  }
   files.sort((a, b) => b.added + b.removed - (a.added + a.removed))
   const log = await git($, ['log', '-3', '--pretty=format:%h%x09%s%x09%cr'])
   const commits: Commit[] =
